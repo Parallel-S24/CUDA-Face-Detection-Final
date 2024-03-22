@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang = "en">
+    <head>
+        <meta charset = "UTF-8">
+        <meta http-equiv= "X-UA-Compatible" content = "IE=edge">
+        <meta name = "viewport" content = "width = device-width, initial-scale = 1.0">
+        <title> Ria Manathkar Portfolio </title>
+        <link rel= "stylesheet" href= "style.css">
+        <link rel= "stylesheet" href= "lightbox.min.css">
+        <script src="https://kit.fontawesome.com/a5337e4a03.js" crossorigin="anonymous"></script>
+    </head>
+    
+    <body>
+        <div id= "header">
+            <div class = "container">
+                <nav>
+                    <ul>
+                        <li><a href="#header">Home</a></li>
+                        <li><a href="#projects">Documents</a></li>
+                        <li><a href="#x">Source Code</a></li>
+                    </ul>
+                </nav>
+                <div class="header-main-text">
+                    <p>Product Designer + Software Developer</p>
+                </div>
+                <div class="header-text">
+                    <h1>Ria<br> Manathkar</h1>
+                    <h2>Combining elements of technical computer science and software<br> engineering with creative skills in design</h2>
+                </div>
+            </div>
+        </div>
+        <!-- -------- projects ------- -->
+        <div id="projects">
+            <div class = "container">
+                <!-- <div class = "project-subheader-text">
+                    <p>| Design + Development |</p>
+                </div> -->
+                <div class= "project-header-text">
+                <h1>Documents</h1>
+                </div>
+                <div class="project-list">
+                    <div class="project">
+                        <img src="images/project-back.png">
+                        <a href="adventureplanner.html">
+                            <div class = "layer">
+                                <h3>Project Proposal</h3>
+                                
+                            </div>
+                        </a>
+                    </div>
+                    <div class="project">
+                        <img src="images/project-back.png">
+                        <a href="negotium.html">
+                            <div class = "layer">
+                                <h3>Project Milestone Report</h3>
+                                <!-- <p>Developing a mobile application combatting the gender wage gap by teaching women how to negotiate</p> -->
+                            </div>
+                        </a>
+                    </div>
+                    <div class="project">
+                        <img src="images/project-back.png">
+                        <a href="./beyondresolved.html">
+                            <div class = "layer">
+                                <h3>Final Project Report</h3>
+                                <!-- <p>Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius. Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius.Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius.</p> -->
+                            </div>
+                        </a>
+                    </div>
+                    <div class="project">
+                        <img src="images/project-back.png">
+                        <a href="./studyfair.html">
+                            <div class = "layer">
+                                <h3>Final Poster</h3>
+                                <!-- <p>Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius. Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius.Ea eos essent ornatus percipit, mea an persecuti pertinacia partiendo eu ius.</p> -->
+                            </div>
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <!-- -------- footer ------- -->
+        <div id="footer">
+            <div class = "container">
+                <div class = "footer-text">
+                    <p>© Copyright 2019. Laaqiq All Right Reserved</p>
+                </div>
+            </div>
+        </div>
+        <script src = "app.js"></script>
+        <script src = "lightbox-plus-jquery.min.js"></script>
+        <script>
+            lightbox.option({
+              'resizeDuration': 50,
+              'wrapAround': true
+            })
+        </script>
+
+        <script>
+            let loadMoreBtn = document.querySelector('#load-more');
+            let loadLessBtn = document.querySelector('#load-less');
+            let currentItem = 10;
+            
+            loadMoreBtn.onclick = () =>{
+                let photos = [...document.querySelectorAll('.container .box .photo')];
+                for (var i = currentItem; i < photos.length; i++){
+                    photos[i].style.display = 'grid';
+                    photos[i].style.height = '100%';
+                }
+                loadMoreBtn.style.display = 'none';
+                loadLessBtn.style.display = 'block';
+            }
+
+            loadLessBtn.onclick = () =>{
+                let photos = [...document.querySelectorAll('.container .box .photo')];
+                for (var i = currentItem; i < photos.length; i++){
+                    photos[i].style.display = 'none';
+                }
+                loadMoreBtn.style.display = 'block';
+                loadLessBtn.style.display = 'none';
+            }
+        </script>
+    </body>
+</html>
