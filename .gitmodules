@@ -1,0 +1,3 @@
+[submodule "code/code/ViolaAndJones"]
+	path = code/code/ViolaAndJones
+	url = https://github.com/alexdemartos/ViolaAndJones.git
