@@ -1,0 +1,72 @@
+body, html {
+	font-family: 'arial', 'helvetica', sans-serif;
+}
+
+#input {
+	width: 650px;
+	height: 490px;
+	display: inline-block;
+}
+
+#video {
+	width: 640;
+	height: 480px;
+	border-width: 5px;
+	border-color: #000;
+	border-style: solid;
+	position: absolute;
+	z-index: 10;
+}
+
+#output-overlay-canvas {
+	width: 640px;
+	height: 480px;
+	border-width: 5px;
+	border-color: #ffff00;
+	border-color: #000;
+	border-style: solid;
+	position: absolute;
+	z-index: 20;
+}
+
+#input-canvas {
+	width: 640px;
+	height: 480px;
+	display: none;
+}
+
+.panel {
+	width: 400px;
+	display: inline-block;
+	vertical-align: top;
+}
+
+.stack {
+	margin-left: 20px;
+	margin-bottom: 30px;
+	font-size: 16px;
+	font-weight: bolder;
+}
+
+.slider {
+	padding: 10px;
+	margin-left: 20px;
+}
+
+.ui-text {
+	margin-left: 30px;
+}
+
+.ck {
+	margin-left: 30px;
+	margin-top: -10px;
+}
+
+.param-text {
+	color: #cc0066;
+	font-weight: bolder;
+}
+
+.ui-button {
+	margin: 10px;
+}
