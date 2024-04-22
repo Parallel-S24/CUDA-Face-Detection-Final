@@ -9,6 +9,7 @@
  * @param {Int} baseResolution Base resolution for the cascade classifer
  */
 CascadeClassifier::CascadeClassifier(int baseResolution) {
+	printf("im in constructor 1\n");
 	this->baseResolution = baseResolution;
 }
 
@@ -18,6 +19,7 @@ CascadeClassifier::CascadeClassifier(int baseResolution) {
  * @param {std::vector<StrongClassifier>} sc             A set of strong classifiers to add as layers
  */
 CascadeClassifier::CascadeClassifier(int baseResolution, std::vector<StrongClassifier> sc) {
+	printf("im in constructor 2\n");
 	this->baseResolution = baseResolution;
 	this->strongClassifiers = sc;
 }

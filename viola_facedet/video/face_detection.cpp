@@ -17,13 +17,13 @@ std::string readModelFile(const std::string& filename) {
     buffer << file.rdbuf();
     return buffer.str();
 }
-std::vector<int> intToStringArray(const std::string& input) {
-    std::vector<int> result;
-    for (char c : input) {
-        result.push_back(static_cast<int>(c));  // Cast char to int to store ASCII value
-    }
-    return result;
-}
+// std::vector<int> intToStringArray(const std::string& input) {
+//     std::vector<int> result;
+//     for (char c : input) {
+//         result.push_back(static_cast<int>(c));  // Cast char to int to store ASCII value
+//     }
+//     return result;
+// }
 
 int main() {
     // Load the face detection model
@@ -47,7 +47,7 @@ int main() {
     }
 
     cv::namedWindow("web cam", cv::WINDOW_AUTOSIZE);
-    cv::namedWindow("Gray video", cv::WINDOW_AUTOSIZE);
+    // cv::namedWindow("Gray video", cv::WINDOW_AUTOSIZE);
 
     while (true) {
         cv::Mat frame;
@@ -59,15 +59,15 @@ int main() {
         }
 
         // Convert to grayscale
-        cv::Mat gray;
-        int height = gray.rows;
-        int width = gray.cols;
-        cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
-        cv::imshow("Gray video", gray);
+        // cv::Mat gray;
+        // cv::cvtColor(frame, gray, cv::COLOR_BGR2GRAY);
+        int height = frame.rows;
+        int width = frame.cols;
+        // cv::imshow("Gray video", gray);
 
         // Face detection
         std::vector<cv::Rect> faces;
-        faces = wasmface::detect(frame, width, height, face_cascade, 2.0, 2.0, true, 0.3, 5);
+        faces = wasmface::detect(frame, width, height, face_cascade, 2.0, 2.0, true, 0.3, 15);
 
         // Draw rectangles around detected faces
         for (const auto& rect : faces) {

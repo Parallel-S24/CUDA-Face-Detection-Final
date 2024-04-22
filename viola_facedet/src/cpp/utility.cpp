@@ -76,18 +76,22 @@ unsigned char* toGrayscale(unsigned char inputBuf[], int w, int h) {
 // 	return gs;
 // }
 float* toGrayscaleFloat(const cv::Mat& image, int w, int h) {
-    int size = w * h;
+    int size = w * h *4;
     float* gs = new float[size];  // Allocate space for grayscale values only
 
     for (int y = 0; y < h; ++y) {
         for (int x = 0; x < w; ++x) {
+			int index = (y*w +x)*4;
             // Get pixel at (x, y) and calculate grayscale value
             cv::Vec3b color = image.at<cv::Vec3b>(y, x);
             float r = color[2] * 0.2126f;  // Red component
             float g = color[1] * 0.7152f;  // Green component
             float b = color[0] * 0.0722f;  // Blue component
-            float luma = r + g + b;        // Calculate luma
-            gs[y * w + x] = luma;          // Store grayscale value at correct index
+            float luma = r + g + b;  
+			gs[index] = r;  
+			gs[index+1] = g;  
+			gs[index+2] = b;     
+            gs[index+3] = 255.0f - luma;     // Store grayscale value at correct index
         }
     }
     return gs;

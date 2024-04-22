@@ -66,7 +66,6 @@ std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>
 		int last = ind.size() - 1;
 		int n = ind[last]; 
 		pick.push_back(std::pair<int, int> (n, 0));  
-		
 		// Suppress bounding boxes that overlap 
 		int neighborsCount = 0;
 		std::vector<int> suppress = {last};
@@ -86,8 +85,15 @@ std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>
 				neighborsCount += 1;
 			}
 		}
+		// for (size_t i = 0; i < suppress.size(); i++) {
+		// 	std::cout << suppress[i] << (i < suppress.size() - 1 ? ", " : "");
+		// }
+		// std::cout << std::endl;
+		std::sort(suppress.begin(), suppress.end(), std::greater<int>());
 
-		for (int i = 0; i < suppress.size(); i += 1) ind.erase(ind.begin() + suppress[i]);
+		for (int i = 0; i < suppress.size(); i += 1) 
+			ind.erase(ind.begin() + suppress[i]);
+
 		pick.back().second = neighborsCount;
 	}
 
@@ -164,6 +170,7 @@ void destroy(CascadeClassifier* cc) {
 std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifier* cco, 
                                       float step, float delta, bool pp, float othresh, int nthresh) {
 	CascadeClassifier* cc = new CascadeClassifier(*cco);
+	// printf("base res is: %d\n", cc->baseResolution);
 	
 	int byteSize = w * h * 4;
 	auto fpgs = toGrayscaleFloat(image, w, h);
@@ -184,7 +191,6 @@ std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifi
 				bool c = cc->classify(integral, x, y, mean, sd);
 				
 				if (c) {
-					printf("detecting my face!\n");
 					std::array<int, 3> bounding = {x, y, cc->baseResolution};
 					roi.push_back(bounding);
 				}
@@ -192,23 +198,19 @@ std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifi
 		}
 		cc->scale(step);
 	}
-
+	// TODO: segfaulting in nonmax
 	if (pp) roi = nonMaxSuppression(roi, othresh, nthresh);
 
 	// We return a 1D array on the heap with its length stashed as the first element
-	// TODO: blen is not the correct size here
-	int blen = roi.size() * 3 + 1;
-	std::vector<cv::Rect> boxes(blen);
-	// boxes[0] = blen;
-	for (int i = 0, j = 1; i < roi.size(); i += 1, j += 3) {
-		// printf("0: %d\n", roi[i][0]);
-		// printf("1: %d\n", roi[i][1]);
-		// printf("2: %d\n", roi[i][2]);
-		boxes[j] = cv::Rect(roi[i][1], roi[i][2], roi[i][0], roi[i][0]);
+	std::vector<cv::Rect> boxes(roi.size());
+	for (int i = 0; i < roi.size(); i += 1) {
+		printf("0: %d, 1: %d, 2: %d, 2: %d\n", roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
+		boxes[i] = cv::Rect(roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
 		// boxes[j] = roi[i][0];
 		// boxes[j + 1] = roi[i][1];
 		// boxes[j + 2] = roi[i][2];
 	}
+	
 	
 	delete cc;
 	return boxes;
