@@ -4,7 +4,7 @@
 #include <cmath>
 #include <algorithm>
 // #include <emscripten/emscripten.h>
-#include <opencv2/opencv.hpp>
+// #include <opencv2/opencv.hpp>
 
 #include "../../lib/json.hpp"
 
@@ -167,13 +167,13 @@ void destroy(CascadeClassifier* cc) {
  * @param  {Float}              nthresh  Neighbor threshold for post processing
  * @return {uint16_t*}                   Pointer to an array of bounding box geometry
  */
-std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifier* cco, 
+uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco, 
                                       float step, float delta, bool pp, float othresh, int nthresh) {
 	CascadeClassifier* cc = new CascadeClassifier(*cco);
 	// printf("base res is: %d\n", cc->baseResolution);
 	
 	int byteSize = w * h * 4;
-	auto fpgs = toGrayscaleFloat(image, w, h);
+	// auto fpgs = toGrayscaleFloat(image, w, h);
 	auto integral = IntegralImage(fpgs, w, h, byteSize, false);
 	auto integralSquared = IntegralImage(fpgs, w, h, byteSize, true);
 	delete [] fpgs;
@@ -202,13 +202,18 @@ std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifi
 	if (pp) roi = nonMaxSuppression(roi, othresh, nthresh);
 
 	// We return a 1D array on the heap with its length stashed as the first element
-	std::vector<cv::Rect> boxes(roi.size());
-	for (int i = 0; i < roi.size(); i += 1) {
-		printf("0: %d, 1: %d, 2: %d, 2: %d\n", roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
-		boxes[i] = cv::Rect(roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
-		// boxes[j] = roi[i][0];
-		// boxes[j + 1] = roi[i][1];
-		// boxes[j + 2] = roi[i][2];
+	// std::vector<cv::Rect> boxes(roi.size());
+	// for (int i = 0; i < roi.size(); i += 1) {
+	// 	printf("0: %d, 1: %d, 2: %d, 2: %d\n", roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
+		// boxes[i] = cv::Rect(roi[i][0]-500, roi[i][1]+200, roi[i][2], roi[i][2]);
+	// }
+	int blen = roi.size() * 3 + 1;
+	uint16_t* boxes = new uint16_t[blen];
+	boxes[0] = blen;
+	for (int i = 0, j = 1; i < roi.size(); i += 1, j += 3) {
+		boxes[j] = roi[i][0];
+		boxes[j + 1] = roi[i][1];
+		boxes[j + 2] = roi[i][2];
 	}
 	
 	

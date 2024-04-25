@@ -17,6 +17,6 @@
         std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>>& boxes, float thresh, int nthresh);
         CascadeClassifier* create(const char model[]);
         void destroy(CascadeClassifier* cc);
-        std::vector<cv::Rect> detect(const cv::Mat& image, int w, int h, CascadeClassifier* cco, 
+        uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco, 
                                     float step, float delta, bool pp, float othresh, int nthresh);
     }   
