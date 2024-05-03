@@ -5,7 +5,11 @@
 #include <string>
 #include "wasmface.h"
 #include "cascade-classifier.h"
-// g++ -std=c++11 -o image-loader image-loader.cpp wasmface.cpp cascade-classifier.cpp integral-image.cpp strong-classifier.cpp weak-classifier.cpp haar-like.cpp utility.cpp
+#include <array>
+
+// g++ -std=c++11 -o image-loader image-loader.cpp wasmface.cpp ../cuda/cascade-classifier.cu ../cuda/integral-image.cu ../cuda-strong-classifier.cu weak-classifier.cpp haar-like.cpp utility.cpp
+
+// g++ -std=c++11 -o image-loader image-loader.cpp wasmface.cpp cascade-classifier.cpp integral-image.cpp strong-classifier.cu weak-classifier.cpp haar-like.cpp utility.cpp 
 
 float* readFloatArrayFromFile(const std::string& filename, int& size) {
     std::ifstream file("output.txt");
@@ -54,6 +58,7 @@ int main() {
         return 1;
     }
     uint16_t* boxes = wasmface::detect(gray, 1920, 1080, face_cascade, 2.0, 2.0, true, 0.3, 15);
+    printf("SUCCESS!");
     // for (int i = 0; i < size; ++i) {
     //     std::cout << boxes[i];
     //     if (i < size - 1)

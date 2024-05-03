@@ -3,6 +3,7 @@
 #include "cascade-classifier.h"
 #include "integral-image.h"
 #include "strong-classifier.h"
+#include <cstdio>
 
 /**
  * Constructor

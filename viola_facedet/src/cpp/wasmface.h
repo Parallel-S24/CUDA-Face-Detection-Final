@@ -1,4 +1,9 @@
 #pragma once
+#include <array>
+#include "utility.h"
+#include "integral-image.h"
+#include "strong-classifier.h"
+#include "cascade-classifier.h"
 
 // #include "/Users/ria/Documents/School/15418/emsdk/upstream/emscripten/cache/sysroot/include/emscripten/emscripten.h"
 // #include <opencv2/opencv.hpp>

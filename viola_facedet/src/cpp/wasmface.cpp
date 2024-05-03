@@ -122,8 +122,10 @@ CascadeClassifier* create(const char model[]) {
 
 	std::vector<StrongClassifier> sc;
 	for (int i = 0; i < ccJSON["strongClassifiers"].size(); i += 1) {
-		StrongClassifier strongClassifier;
-		strongClassifier.threshold = ccJSON["strongClassifiers"][i]["threshold"];
+		float threshold = ccJSON["strongClassifiers"][i]["threshold"];
+		// TODO-Strong
+		StrongClassifier strongClassifier(threshold);
+		// strongClassifier.threshold = ccJSON["strongClassifiers"][i]["threshold"];
 		for (int j = 0; j < ccJSON["strongClassifiers"][i]["weakClassifiers"].size(); j += 1) {
 			WeakClassifier weakClassifier;
 			weakClassifier.haarlike.type = ccJSON["strongClassifiers"][i]["weakClassifiers"][j]["type"];
@@ -176,6 +178,7 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 	// auto fpgs = toGrayscaleFloat(image, w, h);
 	auto integral = IntegralImage(fpgs, w, h, byteSize, false);
 	auto integralSquared = IntegralImage(fpgs, w, h, byteSize, true);
+	printf("im here guys!!\n");
 	delete [] fpgs;
 
 	// Sweep and scale the detector over the post-normalized input image and collect detections
@@ -183,8 +186,11 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 	while (cc->baseResolution < w && cc->baseResolution < h) {
 		for (int y = 0; y < h - cc->baseResolution; y += step * delta) {
 			for (int x = 0; x < w - cc->baseResolution; x += step * delta) {
-				float sum = integral.getRectangleSum(x, y, cc->baseResolution, cc->baseResolution);
-				float squaredSum = integralSquared.getRectangleSum(x, y, cc->baseResolution, cc->baseResolution);
+				// TODO-Integral
+				// float sum = integral.getRectangleSumDevice(x, y, cc->baseResolution, cc->baseResolution);
+				// float squaredSum = integralSquared.getRectangleSumDevice(x, y, cc->baseResolution, cc->baseResolution);
+				float sum = 0.0f;
+				float squaredSum = 0.0f;
 				float area = std::pow(cc->baseResolution, 2);
 				float mean = sum / area;
 				float sd = std::sqrt(squaredSum / area - std::pow(mean, 2));
