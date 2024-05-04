@@ -6,6 +6,14 @@
 #include "utility.h"
 #include "haar-like.h"
 
+/**
+ * Constructor
+ * @param inputBuf Pointer to the input buffer containing pixel values.
+ * @param w Width of the image.
+ * @param h Height of the image.
+ * @param size Size of the input buffer.
+ * @param squared Flag indicating whether to compute the squared sum (optional, default: false).
+ */
 IntegralImage::IntegralImage(float inputBuf[], int w, int h, int size, bool squared) {
 	data.resize(w, std::vector<float>(h, 0));
 	std::vector<float> sumTable(size);
@@ -20,6 +28,15 @@ IntegralImage::IntegralImage(float inputBuf[], int w, int h, int size, bool squa
 	}
 }
 
+/**
+ * Device function to compute the sum of a rectangle in the integral image.
+ * @param data Pointer to the integral image data.
+ * @param x X-coordinate of the top-left corner of the rectangle.
+ * @param y Y-coordinate of the top-left corner of the rectangle.
+ * @param w Width of the rectangle.
+ * @param h Height of the rectangle.
+ * @return Sum of the rectangle.
+ */
 __device__ float IntegralImage::getRectangleSumDevice(const float* data, int x, int y, int w, int h) {
     float sum;
     if (x != 0 && y != 0) {
@@ -41,6 +58,15 @@ __device__ float IntegralImage::getRectangleSumDevice(const float* data, int x, 
     }
     return sum;
 }
+
+/**
+ * Device function to compute the value of a Haar-like feature.
+ * @param h Haar-like object representing the feature.
+ * @param data Pointer to the integral image data.
+ * @param sx Starting X-coordinate for feature computation.
+ * @param sy Starting Y-coordinate for feature computation.
+ * @return Value of the Haar-like feature.
+ */
 __device__ float IntegralImage::computeFeatureDevice(Haarlike h, const float* data, int sx, int sy) {
     float wSum, bSum;
     if (h.type == 1) {
@@ -66,17 +92,3 @@ __device__ float IntegralImage::computeFeatureDevice(Haarlike h, const float* da
     float f = bSum - wSum;
     return f;
 }
-
-// __global__ void computeFeatureKernel(Haarlike* h, int w, int sx, int sy, float* results, int numFeatures) {
-//     int idx = blockIdx.x * blockDim.x + threadIdx.x;
-//     if (idx < numFeatures) {
-//         results[idx] = computeFeatureDevice(h[idx], data, sx, sy);
-//     }
-// }
-
-// void IntegralImage::computeFeatureBatch(Haarlike* h, int numFeatures, int sx, int sy, float* results) const {
-//     int numThreads = 256;
-//     int numBlocks = (numFeatures + numThreads - 1) / numThreads;
-//     computeFeatureKernel<<<numBlocks, numThreads>>>(h, &data[0][0], data.size(), sx, sy, results, numFeatures);
-//     cudaDeviceSynchronize();
-// }

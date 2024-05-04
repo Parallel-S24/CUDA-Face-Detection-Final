@@ -4,11 +4,11 @@
 
 /**
  * Constructor
- * @param {Int} x    X offset relative to subwindow
- * @param {Int} y    Y offset relative to subwindow
- * @param {Int} w    Constituent rectangle width
- * @param {Int} h    Constituent rectangle height
- * @param {Int} type Feature type 1-5 
+ * @param x X offset relative to subwindow
+ * @param y Y offset relative to subwindow
+ * @param w Constituent rectangle width
+ * @param h Constituent rectangle height
+ * @param type Feature type 1-5 
  */
 Haarlike::Haarlike(int x, int y, int w, int h, int type) {
 	this->x = x; 
@@ -27,7 +27,7 @@ Haarlike::Haarlike() {
 
 /**
  * Destructively scale a Haarlike relative to its base resolution
- * @param {Float} factor The factor by which to scale
+ * @param factor The factor by which to scale
  */
 void Haarlike::scale(float factor) {
 	this->w *= factor;

@@ -4,10 +4,10 @@
 
 /**
  * Constructor
- * @param {Haarlike} haarlike A Haar-like feature
- * @param {Float}    f        The computed feature value
- * @param {Bool}     label    True/false corresponds to positive/negative classification
- * @param {Float}    weight   The voting weight associated with this weak classifier
+ * @param haarlike A Haar-like feature
+ * @param f The computed feature value
+ * @param label True/false corresponds to positive/negative classification
+ * @param weight The voting weight associated with this weak classifier
  */
 WeakClassifier::WeakClassifier(Haarlike haarlike, float f, bool label, float weight) {
 	haarlike = haarlike;
@@ -27,8 +27,8 @@ WeakClassifier::WeakClassifier() {
 
 /**
  * Classify a feature value
- * @param  {Float} featureValue The feature value
- * @return {Int}                1 is a positive classification, -1 is negative
+ * @param  featureValueThe feature value
+ * @return 1 is a positive classification, -1 is negative
  */
 __device__ int WeakClassifier::classify(float featureValue) {
 	if (featureValue * float(this->polarity) < this->threshold * float(this->polarity)) return 1;
@@ -37,7 +37,7 @@ __device__ int WeakClassifier::classify(float featureValue) {
 
 /**
  * Scale a weak classifier relative to its base resolution
- * @param {Float} factor The factor by which to scale
+ * @param factor The factor by which to scale
  */
 void WeakClassifier::scale(float factor) {
 	this->threshold *= (factor * factor);
@@ -46,9 +46,9 @@ void WeakClassifier::scale(float factor) {
 
 /**
  * Compare weak classifiers based on their threshold value
- * @param  {WeakClassifier} a First weak classifier
- * @param  {WeakClassifier} b Second weak classifier
- * @return {Bool}             True if the first weak classifier's threshold is the smaller of the two
+ * @param a First weak classifier
+ * @param b Second weak classifier
+ * @return True if the first weak classifier's threshold is the smaller of the two
  */
 bool comparePotentialWeakClassifiers(const WeakClassifier& a, const WeakClassifier& b) {
 	return a.threshold < b.threshold;

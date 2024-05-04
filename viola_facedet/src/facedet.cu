@@ -4,10 +4,9 @@
 #include <cmath>
 #include <algorithm>
 #include <cuda_runtime.h>
-// #include <emscripten/emscripten.h>
-// #include <opencv2/opencv.hpp>
+#include <opencv2/opencv.hpp>
 
-#include "../../lib/json.hpp"
+#include "../lib/json.hpp"
 
 #include "facedet.h"
 #include "utility.h"
@@ -21,9 +20,9 @@
 namespace facedet {
 /**
  * Compare two pointers based on their dereferenced values
- * @param  {Int*} a First pointer
- * @param  {Int*} b Second pointer
- * @return {Bool}   True if the first pointer's dereferenced value is the smaller of the two
+ * @param a First pointer
+ * @param b Second pointer
+ * @return True if the first pointer's dereferenced value is the smaller of the two
  */
 bool compareDereferencedPtrs(int* a, int* b) {
 	return *a < *b;
@@ -32,10 +31,10 @@ bool compareDereferencedPtrs(int* a, int* b) {
 /**
  * Apply non-maximum suppression to a set of 1:1 aspect ratio bounding boxes
  * Bounding boxes are represented as [x, y, s] where s = width and height
- * @param  {std::vector<std::array<int, 3>>} boxes   The set of bounding boxes
- * @param  {Float}                           thresh  The minimum overlap ratio required for suppression
- * @param  {Float}                           nthresh The minimum number of neighboring boxes required for suppression
- * @return {std::vector<std::array<int, 3>>}         The suppressed set of bounding boxes
+ * @param boxes   The set of bounding boxes
+ * @param thresh  The minimum overlap ratio required for suppression
+ * @param nthresh The minimum number of neighboring boxes required for suppression
+ * @return The suppressed set of bounding boxes
  */
 std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>>& boxes, float thresh, int nthresh) {
 	int len = boxes.size();
@@ -111,8 +110,8 @@ std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>
 
 /**
  * Deserialize and construct a cascade classifier object
- * @param  {Char*}              model A serialized cascade classifier object
- * @return {CascadeClassifier*}       A pointer to a new cascade classifier object
+ * @param model A serialized cascade classifier object
+ * @return A pointer to a new cascade classifier object
  */
 CascadeClassifier* create(const char model[]) {
 	auto ccJSON = nlohmann::json::parse(model);
@@ -121,7 +120,6 @@ CascadeClassifier* create(const char model[]) {
 	for (int i = 0; i < ccJSON["strongClassifiers"].size(); i += 1) {
 		float threshold = ccJSON["strongClassifiers"][i]["threshold"];
 		StrongClassifier strongClassifier(threshold);
-		// strongClassifier.threshold = ccJSON["strongClassifiers"][i]["threshold"];
 		for (int j = 0; j < ccJSON["strongClassifiers"][i]["weakClassifiers"].size(); j += 1) {
 			WeakClassifier weakClassifier;
 			weakClassifier.haarlike.type = ccJSON["strongClassifiers"][i]["weakClassifiers"][j]["type"];
@@ -141,15 +139,7 @@ CascadeClassifier* create(const char model[]) {
 	return cc;
 }
 
-/**
- * Destroy a cascade classifier object
- * Provided as a JavaScript-callable function
- * @param {CascadeClassifier*} cc Pointer to the cascade classifier to destroy
- */
-void destroy(CascadeClassifier* cc) {
-	delete cc;
-}
-
+// TODO Add header comment
 __global__ void getRectangleSumKernel(float* integral_data, IntegralImage integral, float* sum, int rect_width, int rect_height, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -161,23 +151,24 @@ __global__ void getRectangleSumKernel(float* integral_data, IntegralImage integr
     sum[idx] = integral.getRectangleSumDevice(integral_data, x, y, rect_width, rect_height);    
 }
 
-// TODO Task 1: Rewrite this so it takes in image and processes
 /**
  * Use a cascade classifier to detect objects in an HTML5 ImageData buffer
- * @param  {Unsigned char*}     inputBuf Pointer to an HTML5 ImageData buffer
- * @param  {Int}                w        Width of the ImageData object
- * @param  {Int}                h        Height of the ImageData object
- * @param  {CascadeClassifier*} cco      Pointer to a cascade classifier object
- * @param  {Float}              step     Detector scale step to apply
- * @param  {Float}              delta    Detector sweep delta to apply
- * @param  {Bool}               pp       True applies post processing
- * @param  {Float}              othresh  Overlap threshold for post processing
- * @param  {Float}              nthresh  Neighbor threshold for post processing
- * @return {uint16_t*}                   Pointer to an array of bounding box geometry
+ * @param frame	 Image input from webcam 
+ * @param w        Width of the ImageData object
+ * @param h        Height of the ImageData object
+ * @param cco      Pointer to a cascade classifier object
+ * @param step     Detector scale step to apply
+ * @param delta    Detector sweep delta to apply
+ * @param pp       True applies post processing
+ * @param othresh  Overlap threshold for post processing
+ * @param nthresh  Neighbor threshold for post processing
+ * @return Pointer to an array of bounding box geometry
  */
-uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco, 
+//  TODO:update types and convert to grayscale here
+uint16_t* detect(cv::Mat frame, int w, int h, CascadeClassifier* cco, 
                                       float step, float delta, bool pp, float othresh, int nthresh) {
 	CascadeClassifier* cc = new CascadeClassifier(*cco);
+	float* fpgs = toGrayscaleFloat(frame, w, h);
 	int byteSize = w * h * 4;
 	auto integral = IntegralImage(fpgs, w, h, byteSize, false);
 	auto integralSquared = IntegralImage(fpgs, w, h, byteSize, true);
@@ -189,8 +180,6 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 	float* integralsq_data;
 	int width = integral.data.size();
 	int height = integralSquared.data[0].size();
-	printf("width: %d\n", width);
-	printf("height: %d\n", height);
 
 	cudaMalloc(&integral_data, width * height * sizeof(float));
 	cudaMalloc(&integralsq_data, width * height * sizeof(float));
@@ -210,8 +199,7 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 		dim3 blockDim(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y);
 		dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
                 (height + blockDim.y - 1) / blockDim.y);
-		
-		// TODO Configure this		
+			
 		getRectangleSumKernel<<<gridDim, blockDim>>>(integral_data, integral, d_sum, cc->baseResolution, cc->baseResolution, width, height);
 		getRectangleSumKernel<<<gridDim, blockDim>>>(integralsq_data, integralSquared, d_squaredSum, cc->baseResolution, cc->baseResolution, width, height);
 		
@@ -221,36 +209,26 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 		cudaMemcpy(squaredSum, d_squaredSum, width * height * sizeof(float), cudaMemcpyDeviceToHost);
 
 		// Process the results and update roi
-		// TODO figure this out make parallel?
 		for (int y = 0; y < h - cc->baseResolution; y += step * delta) {
 			for (int x = 0; x < w - cc->baseResolution; x += step * delta) {
 				int idx = x + y * width;
 				float area = std::pow(cc->baseResolution, 2);
 				float mean = sum[idx] / area;
 				float sd = std::sqrt(squaredSum[idx] / area - std::pow(mean, 2));
-				// this is done in parallel in strong cc
 				bool c = cc->classify(integral, x, y, mean, sd);
 				if (c) {
-					printf("found box!!\n");
+					// printf("found box\n");
 					std::array<int, 3> bounding = {x, y, cc->baseResolution};
 					roi.push_back(bounding);
 				}
 			}
 		}
 		cc->scale(step);
-		printf("im here guys pt2!!\n");
 	}
 	cudaFree(d_sum);
 	cudaFree(d_squaredSum);
-	printf("im here guys pt3!!\n");
 	if (pp) roi = nonMaxSuppression(roi, othresh, nthresh);
 
-	// We return a 1D array on the heap with its length stashed as the first element
-	// std::vector<cv::Rect> boxes(roi.size());
-	// for (int i = 0; i < roi.size(); i += 1) {
-	// 	printf("0: %d, 1: %d, 2: %d, 2: %d\n", roi[i][0], roi[i][1], roi[i][2], roi[i][2]);
-		// boxes[i] = cv::Rect(roi[i][0]-500, roi[i][1]+200, roi[i][2], roi[i][2]);
-	// }
 	int blen = roi.size() * 3 + 1;
 	uint16_t* boxes = new uint16_t[blen];
 	boxes[0] = blen;
@@ -260,20 +238,9 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 		boxes[j + 2] = roi[i][2];
 	}
 	
-	
 	delete cc;
 	delete[] sum;
 	delete[] squaredSum;
 	return boxes;
 }
-
-// /**
-//  * Main function
-//  * @return {Int}
-//  */
-// int main() {
-// 	std::cout << "Made with Wasmface\n";
-// 	return 0;
-// }
 }
-// }

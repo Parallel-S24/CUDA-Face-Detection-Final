@@ -2,7 +2,7 @@ EXECUTABLE := image-loader
 LDFLAGS=-L/usr/local/cuda-11.7/lib64/ -lcudart
 CU_FILES   := strong-classifier.cu cascade-classifier.cu integral-image.cu weak-classifier.cu weak-classifier.h facedet.cu
 CU_DEPS    := 
-CC_FILES   := utility.cpp haar-like.cpp image-loader.cpp\
+CC_FILES   := utility.cpp haar-like.cpp demo/face_detection.cpp\
 # LOGS	   := logs
 
 all: $(EXECUTABLE)
@@ -27,7 +27,7 @@ LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))
 NVCC=nvcc
 
 OBJS= $(OBJDIR)/cascade-classifier.o $(OBJDIR)/haar-like.o $(OBJDIR)/integral-image.o $(OBJDIR)/utility.o \
-$(OBJDIR)/facedet.o $(OBJDIR)/weak-classifier.o $(OBJDIR)/strong-classifier.o $(OBJDIR)/image-loader.o 
+$(OBJDIR)/facedet.o $(OBJDIR)/weak-classifier.o $(OBJDIR)/strong-classifier.o $(OBJDIR)/face_detection.o 
 
 .PHONY: dirs clean
 
