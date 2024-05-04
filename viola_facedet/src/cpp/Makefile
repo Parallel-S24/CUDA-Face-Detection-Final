@@ -1,8 +1,8 @@
 EXECUTABLE := image-loader
 LDFLAGS=-L/usr/local/cuda-11.7/lib64/ -lcudart
-CU_FILES   := strong-classifier.cu cascade-classifier.cu integral-image.cu
+CU_FILES   := strong-classifier.cu cascade-classifier.cu integral-image.cu weak-classifier.cu weak-classifier.h facedet.cu
 CU_DEPS    := 
-CC_FILES   := utility.cpp haar-like.cpp wasmface.cpp weak-classifier.cpp image-loader.cpp\
+CC_FILES   := utility.cpp haar-like.cpp image-loader.cpp\
 # LOGS	   := logs
 
 all: $(EXECUTABLE)
@@ -12,7 +12,7 @@ all: $(EXECUTABLE)
 ARCH=$(shell uname | sed -e 's/-.*//g')
 OBJDIR=objs
 CXX=g++ -m64
-CXXFLAGS=-O3 -Wall -g
+CXXFLAGS=-O3 -Wall -g -I/usr/local/cuda/include
 HOSTNAME=$(shell hostname)
 
 LIBS       :=
@@ -27,7 +27,7 @@ LDFRAMEWORKS := $(addprefix -framework , $(FRAMEWORKS))
 NVCC=nvcc
 
 OBJS= $(OBJDIR)/cascade-classifier.o $(OBJDIR)/haar-like.o $(OBJDIR)/integral-image.o $(OBJDIR)/utility.o \
-$(OBJDIR)/wasmface.o $(OBJDIR)/weak-classifier.o $(OBJDIR)/strong-classifier.o $(OBJDIR)/image-loader.o 
+$(OBJDIR)/facedet.o $(OBJDIR)/weak-classifier.o $(OBJDIR)/strong-classifier.o $(OBJDIR)/image-loader.o 
 
 .PHONY: dirs clean
 

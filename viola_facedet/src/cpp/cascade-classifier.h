@@ -9,7 +9,7 @@ class StrongClassifier;
 
 class CascadeClassifier {
 	public:
-		CascadeClassifier(int baseResolution);
+		// CascadeClassifier(int baseResolution);
 		CascadeClassifier(int baseResolution, std::vector<StrongClassifier> sc);
 		void scale(float factor);
 		void add(StrongClassifier sc);

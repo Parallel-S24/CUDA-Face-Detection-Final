@@ -1,6 +1,7 @@
 #include <cuda_runtime.h>
 #include <vector>
 #include <iostream>
+#include "integral-image.h"
 
 // CUDA kernel for computing the integral image
 __global__ void computeIntegralImageKernel(const float* input, float* output, int width, int height) {

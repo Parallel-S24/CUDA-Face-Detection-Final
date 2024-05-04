@@ -21,19 +21,19 @@ __global__ void classifyRegionKernel(StrongClassifier* classifiers, int count, I
     }
 }
 
-class CascadeClassifier {
-public:
-    int baseResolution;
-    std::vector<StrongClassifier> strongClassifiers;
+// class CascadeClassifier {
+// public:
+//     int baseResolution;
+//     std::vector<StrongClassifier> strongClassifiers;
 
     // Constructors
-    CascadeClassifier(int baseResolution) : baseResolution(baseResolution) {}
+    CascadeClassifier::CascadeClassifier(int baseResolution) : baseResolution(baseResolution) {}
 
-    CascadeClassifier(int baseResolution, std::vector<StrongClassifier> sc) 
+    CascadeClassifier::CascadeClassifier(int baseResolution, std::vector<StrongClassifier> sc) 
         : baseResolution(baseResolution), strongClassifiers(sc) {}
 
     // Scale the classifier
-    void scale(float factor) {
+    void CascadeClassifier::scale(float factor) {
         baseResolution *= factor;
         StrongClassifier* d_classifiers;
         cudaMalloc(&d_classifiers, strongClassifiers.size() * sizeof(StrongClassifier));
@@ -48,17 +48,17 @@ public:
     }
 
     // Add a strong classifier
-    void add(StrongClassifier sc) {
+    void CascadeClassifier::add(StrongClassifier sc) {
         strongClassifiers.push_back(sc);
     }
 
     // Remove the last strong classifier
-    void removeLast() {
+    void CascadeClassifier::removeLast() {
         strongClassifiers.pop_back();
     }
 
     // Classify a region of an integral image
-    bool classify(IntegralImage& integral, int sx, int sy, float mean, float sd) {
+    bool CascadeClassifier::cclassify(IntegralImage& integral, int sx, int sy, float mean, float sd) {
         bool* results = new bool[strongClassifiers.size()];
         bool* d_results;
         cudaMalloc(&d_results, strongClassifiers.size() * sizeof(bool));
@@ -88,4 +88,4 @@ public:
         delete[] results;
         return true;
     }
-};
+// };

@@ -1,3 +1,4 @@
+#include <cuda_runtime.h>
 #include "weak-classifier.h"
 #include "haar-like.h"
 
@@ -9,12 +10,12 @@
  * @param {Float}    weight   The voting weight associated with this weak classifier
  */
 WeakClassifier::WeakClassifier(Haarlike haarlike, float f, bool label, float weight) {
-	this->haarlike = haarlike;
-	this->threshold = f;
-	this->label = label;
-	this->weight = weight;
-	this->minErr = 1;
-	this->polarity = 0;
+	haarlike = haarlike;
+	threshold = f;
+	label = label;
+	weight = weight;
+	minErr = 1;
+	polarity = 0;
 }
 
 /**
@@ -29,7 +30,7 @@ WeakClassifier::WeakClassifier() {
  * @param  {Float} featureValue The feature value
  * @return {Int}                1 is a positive classification, -1 is negative
  */
-int WeakClassifier::classify(float featureValue) {
+__device__ int WeakClassifier::classify(float featureValue) {
 	if (featureValue * float(this->polarity) < this->threshold * float(this->polarity)) return 1;
 	else return -1;
 }

@@ -20,7 +20,7 @@ IntegralImage::IntegralImage(float inputBuf[], int w, int h, int size, bool squa
 	}
 }
 
-__device__ float IntegralImage::getRectangleSumDevice(const float* data, int w, int x, int y, int h, int sx, int sy) {
+__device__ float IntegralImage::getRectangleSumDevice(const float* data, int x, int y, int w, int h) {
     float sum;
     if (x != 0 && y != 0) {
         float a = data[(y - 1) * w + (x - 1)];
@@ -41,28 +41,27 @@ __device__ float IntegralImage::getRectangleSumDevice(const float* data, int w, 
     }
     return sum;
 }
-
 __device__ float IntegralImage::computeFeatureDevice(Haarlike h, const float* data, int sx, int sy) {
     float wSum, bSum;
     if (h.type == 1) {
-        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w, sx, sy);
-        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w, sx, sy);
+        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w);
+        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w);
     } else if (h.type == 2) {
-        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w, sx, sy) + 
-               getRectangleSumDevice(data, h.w, h.x + sx + h.w * 2, h.y + sy, h.w, sx, sy);
-        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w, sx, sy);
+        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w) + 
+               getRectangleSumDevice(data, h.w, h.x + sx + h.w * 2, h.y + sy, h.w);
+        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w);
     } else if (h.type == 3) {
-        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w, sx, sy);
-        bSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w, sx, sy);
+        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w);
+        bSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w);
     } else if (h.type == 4) {
-        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w, sx, sy) + 
-               getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h * 2, h.w, sx, sy);
-        bSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w, sx, sy);
+        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w) + 
+               getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h * 2, h.w);
+        bSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w);
     } else {
-        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w, sx, sy) + 
-               getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy + h.h, h.w, sx, sy);
-        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w, sx, sy) + 
-               getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w, sx, sy);
+        wSum = getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy, h.w) + 
+               getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy + h.h, h.w);
+        bSum = getRectangleSumDevice(data, h.w, h.x + sx + h.w, h.y + sy, h.w) + 
+               getRectangleSumDevice(data, h.w, h.x + sx, h.y + sy + h.h, h.w);
     }
     float f = bSum - wSum;
     return f;

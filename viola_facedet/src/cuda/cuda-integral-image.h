@@ -2,7 +2,7 @@
 
 #include <vector>
 
-#include "haar-like.h"
+#include "../cpp/haar-like.h"
 
 class IntegralImage {
 	public:

@@ -1,10 +1,10 @@
 #include <opencv2/opencv.hpp>
 #include <fstream> 
 
-//Compile: g++ -std=c++11 -o face_detection face_detection.cpp ../src/cpp/utility.cpp ../src/cpp/wasmface.cpp ../src/cpp/integral-image.cpp ../src/cpp/haar-like.cpp ../src/cpp/weak-classifier.cpp ../src/cpp/strong-classifier.cpp ../src/cpp/cascade-classifier.cpp `pkg-config --cflags --libs opencv4`
+//Compile: g++ -std=c++11 -o face_detection face_detection.cpp ../src/cpp/utility.cpp ../src/cpp/facedet.cpp ../src/cpp/integral-image.cpp ../src/cpp/haar-like.cpp ../src/cpp/weak-classifier.cpp ../src/cpp/strong-classifier.cpp ../src/cpp/cascade-classifier.cpp `pkg-config --cflags --libs opencv4`
 //Run: ./face_detection
 
-#include "../src/cpp/wasmface.h"
+#include "../src/cpp/facedet.h"
 #include "../src/cpp/cascade-classifier.h"
 #include <iostream>
 #include <fstream>
@@ -63,7 +63,7 @@ int main() {
     // Load the face detection model
     std::string jsonContent = readModelFile("../models/human-face.json");
     // std::vector<int> jsonArray = intToStringArray(jsonContent);
-    CascadeClassifier* face_cascade = wasmface::create(jsonContent.c_str());
+    CascadeClassifier* face_cascade = facedet::create(jsonContent.c_str());
     if (!face_cascade) {
         std::cerr << "Failed to load the model." << std::endl;
         return 1;
@@ -107,7 +107,7 @@ int main() {
         //     saveFloatArrayToFile(gray, size, "output.txt");
         // }
 
-        uint16_t* boxes = wasmface::detect(gray, width, height, face_cascade, 2.0, 2.0, true, 0.3, 15);
+        uint16_t* boxes = facedet::detect(gray, width, height, face_cascade, 2.0, 2.0, true, 0.3, 15);
         int num_boxes = (boxes[0] - 1) / 3;
     
         for (int i = 0; i < num_boxes; i++) {

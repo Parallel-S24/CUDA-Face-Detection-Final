@@ -3,21 +3,22 @@
 #include <array>
 #include <cmath>
 #include <algorithm>
+#include <cuda_runtime.h>
 // #include <emscripten/emscripten.h>
 // #include <opencv2/opencv.hpp>
 
 #include "../../lib/json.hpp"
 
-#include "wasmface.h"
+#include "facedet.h"
 #include "utility.h"
 #include "integral-image.h"
 #include "strong-classifier.h"
 #include "cascade-classifier.h"
 
-// #ifdef __cplusplus
-// extern "C" {
-// #endif
-namespace wasmface {
+#define THREADS_PER_BLOCK_X 32
+#define THREADS_PER_BLOCK_Y 32
+
+namespace facedet {
 /**
  * Compare two pointers based on their dereferenced values
  * @param  {Int*} a First pointer
@@ -85,10 +86,6 @@ std::vector<std::array<int, 3>> nonMaxSuppression(std::vector<std::array<int, 3>
 				neighborsCount += 1;
 			}
 		}
-		// for (size_t i = 0; i < suppress.size(); i++) {
-		// 	std::cout << suppress[i] << (i < suppress.size() - 1 ? ", " : "");
-		// }
-		// std::cout << std::endl;
 		std::sort(suppress.begin(), suppress.end(), std::greater<int>());
 
 		for (int i = 0; i < suppress.size(); i += 1) 
@@ -123,7 +120,6 @@ CascadeClassifier* create(const char model[]) {
 	std::vector<StrongClassifier> sc;
 	for (int i = 0; i < ccJSON["strongClassifiers"].size(); i += 1) {
 		float threshold = ccJSON["strongClassifiers"][i]["threshold"];
-		// TODO-Strong
 		StrongClassifier strongClassifier(threshold);
 		// strongClassifier.threshold = ccJSON["strongClassifiers"][i]["threshold"];
 		for (int j = 0; j < ccJSON["strongClassifiers"][i]["weakClassifiers"].size(); j += 1) {
@@ -145,7 +141,6 @@ CascadeClassifier* create(const char model[]) {
 	return cc;
 }
 
-// TODO Task 2: Do we need this?
 /**
  * Destroy a cascade classifier object
  * Provided as a JavaScript-callable function
@@ -153,6 +148,17 @@ CascadeClassifier* create(const char model[]) {
  */
 void destroy(CascadeClassifier* cc) {
 	delete cc;
+}
+
+__global__ void getRectangleSumKernel(float* integral_data, IntegralImage integral, float* sum, int rect_width, int rect_height, int width, int height) {
+    int x = blockIdx.x * blockDim.x + threadIdx.x;
+    int y = blockIdx.y * blockDim.y + threadIdx.y;
+	int idx = x + y * width;
+    
+    if (x >= width || y >= height) return;
+    
+    // Compute the rectangle sum for the specified region
+    sum[idx] = integral.getRectangleSumDevice(integral_data, x, y, rect_width, rect_height);    
 }
 
 // TODO Task 1: Rewrite this so it takes in image and processes
@@ -172,39 +178,71 @@ void destroy(CascadeClassifier* cc) {
 uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco, 
                                       float step, float delta, bool pp, float othresh, int nthresh) {
 	CascadeClassifier* cc = new CascadeClassifier(*cco);
-	// printf("base res is: %d\n", cc->baseResolution);
-	
 	int byteSize = w * h * 4;
-	// auto fpgs = toGrayscaleFloat(image, w, h);
 	auto integral = IntegralImage(fpgs, w, h, byteSize, false);
 	auto integralSquared = IntegralImage(fpgs, w, h, byteSize, true);
-	printf("im here guys!!\n");
 	delete [] fpgs;
 
 	// Sweep and scale the detector over the post-normalized input image and collect detections
 	std::vector<std::array<int, 3>> roi;
+	float* integral_data;
+	float* integralsq_data;
+	int width = integral.data.size();
+	int height = integralSquared.data[0].size();
+	printf("width: %d\n", width);
+	printf("height: %d\n", height);
+
+	cudaMalloc(&integral_data, width * height * sizeof(float));
+	cudaMalloc(&integralsq_data, width * height * sizeof(float));
+
+	cudaMemcpy(integral_data, integral.data[0].data(), width * height * sizeof(float), cudaMemcpyHostToDevice);
+	cudaMemcpy(integralsq_data, integralSquared.data[0].data(), width * height * sizeof(float), cudaMemcpyHostToDevice);
+
+	// TODO make this an array of sums
+	float *sum = new float[width * height];
+	float *squaredSum = new float[width * height];
+
+	float *d_sum, *d_squaredSum;
+
+	cudaMalloc(&d_sum, width * height * sizeof(float));
+	cudaMalloc(&d_squaredSum, width * height * sizeof(float));
 	while (cc->baseResolution < w && cc->baseResolution < h) {
+		dim3 blockDim(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y);
+		dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
+                (height + blockDim.y - 1) / blockDim.y);
+		
+		// TODO Configure this		
+		getRectangleSumKernel<<<gridDim, blockDim>>>(integral_data, integral, d_sum, cc->baseResolution, cc->baseResolution, width, height);
+		getRectangleSumKernel<<<gridDim, blockDim>>>(integralsq_data, integralSquared, d_squaredSum, cc->baseResolution, cc->baseResolution, width, height);
+		
+		cudaDeviceSynchronize();
+
+		cudaMemcpy(sum, d_sum, width * height * sizeof(float), cudaMemcpyDeviceToHost);
+		cudaMemcpy(squaredSum, d_squaredSum, width * height * sizeof(float), cudaMemcpyDeviceToHost);
+
+		// Process the results and update roi
+		// TODO figure this out make parallel?
 		for (int y = 0; y < h - cc->baseResolution; y += step * delta) {
 			for (int x = 0; x < w - cc->baseResolution; x += step * delta) {
-				// TODO-Integral
-				// float sum = integral.getRectangleSumDevice(x, y, cc->baseResolution, cc->baseResolution);
-				// float squaredSum = integralSquared.getRectangleSumDevice(x, y, cc->baseResolution, cc->baseResolution);
-				float sum = 0.0f;
-				float squaredSum = 0.0f;
+				int idx = x + y * width;
 				float area = std::pow(cc->baseResolution, 2);
-				float mean = sum / area;
-				float sd = std::sqrt(squaredSum / area - std::pow(mean, 2));
+				float mean = sum[idx] / area;
+				float sd = std::sqrt(squaredSum[idx] / area - std::pow(mean, 2));
+				// this is done in parallel in strong cc
 				bool c = cc->classify(integral, x, y, mean, sd);
-				
 				if (c) {
+					printf("found box!!\n");
 					std::array<int, 3> bounding = {x, y, cc->baseResolution};
 					roi.push_back(bounding);
 				}
 			}
 		}
 		cc->scale(step);
+		printf("im here guys pt2!!\n");
 	}
-	// TODO: segfaulting in nonmax
+	cudaFree(d_sum);
+	cudaFree(d_squaredSum);
+	printf("im here guys pt3!!\n");
 	if (pp) roi = nonMaxSuppression(roi, othresh, nthresh);
 
 	// We return a 1D array on the heap with its length stashed as the first element
@@ -224,6 +262,8 @@ uint16_t* detect(float* fpgs, int w, int h, CascadeClassifier* cco,
 	
 	
 	delete cc;
+	delete[] sum;
+	delete[] squaredSum;
 	return boxes;
 }
 

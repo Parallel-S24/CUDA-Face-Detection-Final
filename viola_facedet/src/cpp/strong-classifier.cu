@@ -1,4 +1,7 @@
+#include <iostream>
 #include <vector>
+#include <array>
+#include <algorithm>
 #include <cuda_runtime.h>
 
 #include "strong-classifier.h"
@@ -10,7 +13,6 @@
 __global__ void evaluateWeakClassifiersKernel(WeakClassifier* classifiers, int count, IntegralImage integral, float* d_data, int sx, int sy, float mean, float sd, float* weights, float threshold, bool* results) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     if (idx < count) {
-        // TODO-Strong
         // float* dataPtr = integral.data[0].data(); 
         float f = integral.computeFeatureDevice(classifiers[idx].haarlike, d_data, sx, sy);
         // float f = 0.0f;
@@ -20,41 +22,16 @@ __global__ void evaluateWeakClassifiersKernel(WeakClassifier* classifiers, int c
             f += (classifiers[idx].haarlike.w * classifiers[idx].haarlike.h * 3 * mean) / 3;
         }
         if (sd != 0) f /= sd;
-        // TODO-Strong
-        // float score = classifiers[idx].classify(f) * weights[idx];
-        float score = 0.0f;
+        float score = classifiers[idx].classify(f) * weights[idx];
         results[idx] = score >= threshold;
     }
 }
 ////////////////////////////////////////////////////////////////////////////////////////
 
 StrongClassifier::StrongClassifier(float thresh) : threshold(thresh){}
-    // TODO-Strong
-    // cudaMalloc(&threshold, sizeof(float));
-    // need help getting the weights, threshhold stuff
-    // float* d_weights;
-    // float initialThreshold = 0.5f; // or any other initial value
-    // cudaMalloc(&SCParams.threshold, sizeof(float));
-    // cudaMemcpy(SCParams.threshold, &initialThreshold, sizeof(float), cudaMemcpyHostToDevice);
-// }
 
 StrongClassifier::~StrongClassifier() {
-    // cudaFree(SCParams.threshold);
-    // cudaFree(threshold);
 }
-
-// // Add threshold
-// void updateThreshold(float w) {
-//     cudaMemcpy(threshold, &w, sizeof(float), cudaMemcpyHostToDevice);
-// }
-
-// // Get threshold
-// float getThreshold() {
-//     float hostValue;
-//     float threshold = getThreshold();
-//     cudaMemcpy(&hostValue, &threshold, sizeof(float), cudaMemcpyDeviceToHost);
-//     return hostValue;
-// }
 
 // Add a weak classifier
 void StrongClassifier::addWeakClassifier(WeakClassifier wc, float w) {
@@ -80,7 +57,7 @@ bool StrongClassifier::classify(IntegralImage& integral, int sx, int sy, float m
     float* d_weights;
     cudaMalloc(&d_weights, weights.size() * sizeof(float));
     cudaMemcpy(d_weights, weights.data(), weights.size() * sizeof(float), cudaMemcpyHostToDevice);
-
+    // TODO configure this
     int numThreads = 256;
     int numBlocks = (weakClassifiers.size() + numThreads - 1) / numThreads;
     float* d_data;
