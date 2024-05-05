@@ -139,7 +139,16 @@ CascadeClassifier* create(const char model[]) {
 	return cc;
 }
 
-// TODO Add header comment
+/**
+ * Kernel to compute rectangle sum for integral image on device.
+ * @param integral_data Pointer to the integral image data.
+ * @param integral IntegralImage object representing the integral image.
+ * @param sum Array to store the computed rectangle sums.
+ * @param rect_width Width of the rectangle.
+ * @param rect_height Height of the rectangle.
+ * @param width Width of the image.
+ * @param height Height of the image.
+ */
 __global__ void getRectangleSumKernel(float* integral_data, IntegralImage integral, float* sum, int rect_width, int rect_height, int width, int height) {
     int x = blockIdx.x * blockDim.x + threadIdx.x;
     int y = blockIdx.y * blockDim.y + threadIdx.y;
@@ -164,7 +173,6 @@ __global__ void getRectangleSumKernel(float* integral_data, IntegralImage integr
  * @param nthresh  Neighbor threshold for post processing
  * @return Pointer to an array of bounding box geometry
  */
-//  TODO:update types and convert to grayscale here
 uint16_t* detect(cv::Mat frame, int w, int h, CascadeClassifier* cco, 
                                       float step, float delta, bool pp, float othresh, int nthresh) {
 	CascadeClassifier* cc = new CascadeClassifier(*cco);
@@ -180,6 +188,8 @@ uint16_t* detect(cv::Mat frame, int w, int h, CascadeClassifier* cco,
 	float* integralsq_data;
 	int width = integral.data.size();
 	int height = integralSquared.data[0].size();
+	dim3 blockDim(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y);
+	dim3 gridDim((width + blockDim.x - 1) / blockDim.x, (height + blockDim.y - 1) / blockDim.y);
 
 	cudaMalloc(&integral_data, width * height * sizeof(float));
 	cudaMalloc(&integralsq_data, width * height * sizeof(float));
@@ -187,7 +197,6 @@ uint16_t* detect(cv::Mat frame, int w, int h, CascadeClassifier* cco,
 	cudaMemcpy(integral_data, integral.data[0].data(), width * height * sizeof(float), cudaMemcpyHostToDevice);
 	cudaMemcpy(integralsq_data, integralSquared.data[0].data(), width * height * sizeof(float), cudaMemcpyHostToDevice);
 
-	// TODO make this an array of sums
 	float *sum = new float[width * height];
 	float *squaredSum = new float[width * height];
 
@@ -196,9 +205,6 @@ uint16_t* detect(cv::Mat frame, int w, int h, CascadeClassifier* cco,
 	cudaMalloc(&d_sum, width * height * sizeof(float));
 	cudaMalloc(&d_squaredSum, width * height * sizeof(float));
 	while (cc->baseResolution < w && cc->baseResolution < h) {
-		dim3 blockDim(THREADS_PER_BLOCK_X, THREADS_PER_BLOCK_Y);
-		dim3 gridDim((width + blockDim.x - 1) / blockDim.x,
-                (height + blockDim.y - 1) / blockDim.y);
 			
 		getRectangleSumKernel<<<gridDim, blockDim>>>(integral_data, integral, d_sum, cc->baseResolution, cc->baseResolution, width, height);
 		getRectangleSumKernel<<<gridDim, blockDim>>>(integralsq_data, integralSquared, d_squaredSum, cc->baseResolution, cc->baseResolution, width, height);

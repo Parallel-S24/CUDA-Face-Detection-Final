@@ -75,8 +75,7 @@ bool StrongClassifier::classify(IntegralImage& integral, int sx, int sy, float m
     float* d_weights;
     cudaMalloc(&d_weights, weights.size() * sizeof(float));
     cudaMemcpy(d_weights, weights.data(), weights.size() * sizeof(float), cudaMemcpyHostToDevice);
-    // TODO configure this
-    int numThreads = 256;
+    int numThreads = 128;
     int numBlocks = (weakClassifiers.size() + numThreads - 1) / numThreads;
 
     float* d_data;
@@ -100,8 +99,7 @@ bool StrongClassifier::classify(IntegralImage& integral, int sx, int sy, float m
     cudaFree(d_results);
     cudaFree(d_classifiers);
     cudaFree(d_weights);
-    // TODO do we need to delete results?
-        // delete[] results;
+    delete[] results;
     if (score >= threshold) return true;
 	else return false;
 }
